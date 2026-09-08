@@ -34,10 +34,10 @@ export default function DashboardPage({ onNavigateAnalyze, onViewHistoryRecord, 
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#111827] dark:text-slate-100 tracking-tight font-sans">
+          <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight font-sans">
             Media Integrity Overview
           </h1>
-          <p className="text-sm text-[#64748B] dark:text-slate-400 font-normal mt-0.5">
+          <p className="text-sm text-[#64748B] font-normal mt-0.5">
             Review recent integrity analyses and detected anomalies across media assets.
           </p>
         </div>
@@ -46,12 +46,13 @@ export default function DashboardPage({ onNavigateAnalyze, onViewHistoryRecord, 
           {onOpenAssistant && (
             <button
               onClick={onOpenAssistant}
-              className="px-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-[#E5E7EB] dark:border-slate-700 text-[#111827] dark:text-slate-100 font-semibold text-sm shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+              className="px-4 py-2.5 rounded-lg bg-white hover:bg-slate-50 border border-[#E5E7EB] text-[#0F172A] font-semibold text-sm shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <Sparkles className="w-4 h-4 text-blue-600" />
               <span>✨ AI Investigator</span>
             </button>
           )}
+
 
           <button
             onClick={onNavigateAnalyze}
