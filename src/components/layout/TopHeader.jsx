@@ -28,7 +28,7 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white/90 dark:bg-[#0F172A]/90 backdrop-blur-md border-b border-[#E5E7EB] dark:border-slate-800 h-16 flex items-center px-4 sm:px-6 lg:px-8 justify-between">
+    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#E5E7EB] h-16 flex items-center px-4 sm:px-6 lg:px-8 justify-between">
       
       {/* Left: Mobile Toggle & Breadcrumbs */}
       <div className="flex items-center gap-3">
@@ -42,7 +42,7 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
         <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
           <span className="hidden sm:inline text-slate-400 font-semibold">TrustVision</span>
           <span className="hidden sm:inline text-slate-300">/</span>
-          <span className="text-slate-900 dark:text-slate-100 font-semibold text-sm">
+          <span className="text-[#111827] font-semibold text-sm">
             {getBreadcrumb()}
           </span>
         </div>
@@ -68,8 +68,8 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
           title="Click to verify FastAPI backend connection"
           className={`flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] border font-medium transition-all ${
             backendStatus?.online
-              ? 'bg-emerald-50/80 text-emerald-700 border-emerald-200 hover:bg-emerald-100/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
-              : 'bg-amber-50/80 text-amber-700 border-amber-200 hover:bg-amber-100/60 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
+              ? 'bg-emerald-50/80 text-emerald-700 border-emerald-200 hover:bg-emerald-100/60'
+              : 'bg-amber-50/80 text-amber-700 border-amber-200 hover:bg-amber-100/60'
           }`}
         >
           <span className={`w-1.5 h-1.5 rounded-full ${backendStatus?.online ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
@@ -78,7 +78,7 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
         </button>
 
         {currentUser && (
-          <div className="flex items-center gap-2 pl-2 border-l border-[#E5E7EB] dark:border-slate-800">
+          <div className="flex items-center gap-2 pl-2 border-l border-[#E5E7EB]">
             <div 
               title={currentUser.email || currentUser.name}
               className="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-[11px] flex items-center justify-center shadow-xs"
@@ -100,6 +100,7 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
 
     </header>
   );
+
 }
 
 

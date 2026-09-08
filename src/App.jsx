@@ -28,7 +28,7 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
-  // Clear any lingering dark class or theme overrides
+  // Enforce clean light/white theme across the app
   useEffect(() => {
     try {
       document.documentElement.classList.remove('dark');
@@ -77,7 +77,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] dark:bg-[#0F172A] text-slate-900 dark:text-slate-100 font-sans flex flex-col relative">
+    <div className="min-h-screen bg-[#F7F8FA] text-slate-900 font-sans flex flex-col relative">
+
       
       {/* Sidebar Shell */}
       <Sidebar 
