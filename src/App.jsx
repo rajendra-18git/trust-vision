@@ -135,15 +135,22 @@ export default function App() {
           )}
         </main>
 
-        {/* Floating Quick Trigger for AI Investigator */}
+        {/* Uiverse.io Styled Floating Quick Trigger for AI Investigator */}
         <button
           onClick={() => setIsAssistantOpen(true)}
           title="Open Trust Vision AI Investigator"
-          className="fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-3 rounded-full shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 cursor-pointer border border-blue-500/50"
+          className="fixed bottom-6 right-6 z-40 uiverse-ai-btn"
         >
-          <Sparkles className="w-4 h-4 animate-pulse text-blue-200" />
-          <span className="hidden sm:inline">✨ AI Investigator</span>
+          <div className="button-outer">
+            <div className="button-inner">
+              <span>
+                <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+                <span className="hidden sm:inline">✨ AI Investigator</span>
+              </span>
+            </div>
+          </div>
         </button>
+
 
         {/* AI Assistant Drawer Component */}
         <AIAssistantDrawer 
