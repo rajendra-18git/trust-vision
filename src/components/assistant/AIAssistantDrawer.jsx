@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, 
   X, 
+  Minus,
   Send, 
   ShieldCheck, 
   FileText, 
@@ -11,7 +12,8 @@ import {
   HelpCircle,
   FileSearch,
   RefreshCw,
-  Info
+  Info,
+  GripHorizontal
 } from 'lucide-react';
 import { sendAssistantMessage } from '../../services/api';
 
@@ -20,7 +22,13 @@ export default function AIAssistantDrawer({ isOpen, onClose, currentRecord }) {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [chatPos, setChatPos] = useState(null);
+  
   const messagesEndRef = useRef(null);
+  const windowRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const initialPosRef = useRef({ x: 0, y: 0 });
 
   // Auto-scroll to bottom of messages
   const scrollToBottom = () => {
@@ -35,7 +43,7 @@ export default function AIAssistantDrawer({ isOpen, onClose, currentRecord }) {
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       const initialGreeting = currentRecord 
-        ? `Hello! I am **Trust Vision AI Investigator**. I am ready to inspect the forensic evidence for **${currentRecord.filename}** (Status: **${currentRecord.status}**).\n\nSelect a quick action below or ask any question about the model prediction, SHA-256 hash, metadata, or detected issues.`
+        ? `Hello! I am **Trust Vision AI Investigator**. I am ready to inspect forensic evidence for **${currentRecord.filename}** (Status: **${currentRecord.status}**).\n\nSelect a quick action below or ask any question about the model prediction, SHA-256 hash, metadata, or detected issues.`
         : `Hello! I am **Trust Vision AI Investigator**. I help explain computer vision integrity analysis, SHA-256 hash verification, model predictions, and metadata findings.\n\nUpload or select an analysis record to begin investigating.`;
 
       setMessages([
@@ -48,6 +56,91 @@ export default function AIAssistantDrawer({ isOpen, onClose, currentRecord }) {
       ]);
     }
   }, [isOpen, currentRecord]);
+
+  // Dragging logic for floating chat window header
+  const handleHeaderMouseDown = (e) => {
+    if (e.target.closest('button')) return;
+    if (e.button !== 0) return;
+
+    const elem = windowRef.current;
+    if (!elem) return;
+
+    const rect = elem.getBoundingClientRect();
+    isDraggingRef.current = true;
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    initialPosRef.current = { x: rect.left, y: rect.top };
+
+    const onMouseMove = (ev) => {
+      if (!isDraggingRef.current) return;
+      const dx = ev.clientX - dragStartRef.current.x;
+      const dy = ev.clientY - dragStartRef.current.y;
+
+      let newX = initialPosRef.current.x + dx;
+      let newY = initialPosRef.current.y + dy;
+
+      const width = rect.width || 400;
+      const height = rect.height || 560;
+      const maxX = window.innerWidth - width - 10;
+      const maxY = window.innerHeight - height - 10;
+
+      newX = Math.max(10, Math.min(newX, maxX));
+      newY = Math.max(10, Math.min(newY, maxY));
+
+      setChatPos({ x: newX, y: newY });
+    };
+
+    const onMouseUp = () => {
+      isDraggingRef.current = false;
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  const handleHeaderTouchStart = (e) => {
+    if (e.target.closest('button')) return;
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+
+    const elem = windowRef.current;
+    if (!elem) return;
+
+    const rect = elem.getBoundingClientRect();
+    isDraggingRef.current = true;
+    dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+    initialPosRef.current = { x: rect.left, y: rect.top };
+
+    const onTouchMove = (ev) => {
+      if (!isDraggingRef.current || ev.touches.length !== 1) return;
+      const t = ev.touches[0];
+      const dx = t.clientX - dragStartRef.current.x;
+      const dy = t.clientY - dragStartRef.current.y;
+
+      let newX = initialPosRef.current.x + dx;
+      let newY = initialPosRef.current.y + dy;
+
+      const width = rect.width || 400;
+      const height = rect.height || 560;
+      const maxX = window.innerWidth - width - 10;
+      const maxY = window.innerHeight - height - 10;
+
+      newX = Math.max(10, Math.min(newX, maxX));
+      newY = Math.max(10, Math.min(newY, maxY));
+
+      setChatPos({ x: newX, y: newY });
+    };
+
+    const onTouchEnd = () => {
+      isDraggingRef.current = false;
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+
+    window.addEventListener('touchmove', onTouchMove);
+    window.addEventListener('touchend', onTouchEnd);
+  };
 
   if (!isOpen) return null;
 
@@ -113,201 +206,217 @@ export default function AIAssistantDrawer({ isOpen, onClose, currentRecord }) {
   ];
 
   return (
-    <>
-      {/* Backdrop */}
+    <div 
+      ref={windowRef}
+      style={
+        chatPos
+          ? { left: `${chatPos.x}px`, top: `${chatPos.y}px`, bottom: 'auto', right: 'auto' }
+          : {}
+      }
+      className={`fixed z-50 w-[380px] sm:w-[440px] max-w-[calc(100vw-24px)] h-[560px] max-h-[calc(100vh-100px)] bg-white dark:bg-[#0F172A] border border-[#E5E7EB] dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col justify-between overflow-hidden font-sans text-slate-900 dark:text-slate-100 transition-shadow ${
+        !chatPos ? 'bottom-20 right-6' : ''
+      }`}
+    >
+      
+      {/* Draggable Chat Window Header */}
       <div 
-        onClick={onClose}
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 transition-opacity"
-      />
-
-      {/* Slide-over Drawer (Desktop Right Drawer / Mobile Full Screen) */}
-      <aside className="fixed inset-y-0 right-0 z-50 w-full sm:w-[460px] md:w-[500px] bg-white dark:bg-[#0F172A] border-l border-[#E5E7EB] dark:border-slate-800 shadow-2xl flex flex-col justify-between transition-transform duration-300 ease-in-out font-sans text-slate-900 dark:text-slate-100">
-        
-        {/* Drawer Header */}
-        <div className="px-5 py-4 border-b border-[#E5E7EB] dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-blue-600 text-white shadow-sm flex items-center justify-center">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base flex items-center gap-2 tracking-tight">
-                Trust Vision AI Investigator
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Forensic Analysis & Evidence Assistant
-              </p>
-            </div>
+        onMouseDown={handleHeaderMouseDown}
+        onTouchStart={handleHeaderTouchStart}
+        className="px-4 py-3 border-b border-[#E5E7EB] dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
+      >
+        <div className="flex items-center gap-2.5 pointer-events-none">
+          <div className="p-1.5 rounded-lg bg-blue-600 text-white shadow-xs flex items-center justify-center">
+            <Sparkles className="w-4 h-4" />
           </div>
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5 tracking-tight">
+              AI Investigator Chat
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Online" />
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              Forensic Evidence & Integrity Assistant
+            </p>
+          </div>
+        </div>
 
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={onClose}
+            aria-label="Minimize AI Investigator"
+            title="Minimize Chat"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <Minus className="w-4 h-4" />
+          </button>
           <button 
             onClick={onClose}
             aria-label="Close AI Investigator"
+            title="Close Chat"
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
+      </div>
 
-        {/* Current Target Record Banner */}
-        {currentRecord ? (
-          <div className="px-5 py-2.5 bg-blue-50/60 dark:bg-blue-950/30 border-b border-blue-100 dark:border-blue-900/40 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 overflow-hidden">
-              <FileSearch className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                {currentRecord.filename}
-              </span>
-            </div>
-            <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider shrink-0 ${
-              currentRecord.status === 'TRUSTED'
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300'
-                : currentRecord.status === 'SUSPICIOUS'
-                ? 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300'
-                : 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300'
-            }`}>
-              {currentRecord.status}
+      {/* Current Target Record Banner */}
+      {currentRecord ? (
+        <div className="px-4 py-2 bg-blue-50/60 dark:bg-blue-950/30 border-b border-blue-100 dark:border-blue-900/40 flex items-center justify-between text-xs shrink-0">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <FileSearch className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[200px]">
+              {currentRecord.filename}
             </span>
           </div>
-        ) : (
-          <div className="px-5 py-2 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-900/40 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
-            <Info className="w-3.5 h-3.5 shrink-0 text-amber-600" />
-            <span>No analysis record currently selected. Open a result to inspect detailed evidence.</span>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider shrink-0 ${
+            currentRecord.status === 'TRUSTED'
+              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300'
+              : currentRecord.status === 'SUSPICIOUS'
+              ? 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300'
+              : 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300'
+          }`}>
+            {currentRecord.status}
+          </span>
+        </div>
+      ) : (
+        <div className="px-4 py-2 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-900/40 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2 shrink-0">
+          <Info className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+          <span className="truncate">No file selected. Ask any general computer vision question!</span>
+        </div>
+      )}
+
+      {/* Messages List Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs sm:text-sm">
+        
+        {messages.map((msg) => {
+          const isUser = msg.role === 'user';
+
+          return (
+            <div 
+              key={msg.id} 
+              className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} space-y-1`}
+            >
+              <div className={`max-w-[88%] rounded-2xl p-3.5 transition-all shadow-xs ${
+                isUser 
+                  ? 'bg-[#2563EB] text-white rounded-br-none' 
+                  : 'bg-slate-50 dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-bl-none'
+              }`}>
+                
+                {/* Assistant Header Icon if Assistant */}
+                {!isUser && (
+                  <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-200/80 dark:border-slate-700/80">
+                    <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                      <Sparkles className="w-3 h-3" />
+                      <span>AI Investigator</span>
+                    </div>
+                    
+                    {/* Copy Action */}
+                    <button
+                      onClick={() => handleCopy(msg.id, msg.content)}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center gap-1 text-[10px]"
+                      title="Copy explanation"
+                    >
+                      {copiedId === msg.id ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-500" />
+                          <span className="text-emerald-500 font-medium">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {/* Formatted Text Content */}
+                <div className="whitespace-pre-wrap leading-relaxed font-sans text-xs">
+                  {msg.content.split('\n').map((paragraph, pIdx) => {
+                    if (!paragraph.trim()) return <div key={pIdx} className="h-1.5" />;
+                    return (
+                      <p key={pIdx} className="mb-1 last:mb-0">
+                        {paragraph}
+                      </p>
+                    );
+                  })}
+                </div>
+
+              </div>
+
+              <span className="text-[10px] text-slate-400 px-1">
+                {msg.timestamp}
+              </span>
+            </div>
+          );
+        })}
+
+        {/* Loading Typing Indicator */}
+        {isLoading && (
+          <div className="flex items-center gap-2.5 p-3 bg-slate-50 dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700 rounded-2xl rounded-bl-none max-w-[80%] text-xs text-blue-600 dark:text-blue-400 font-medium animate-pulse">
+            <Sparkles className="w-3.5 h-3.5 animate-spin shrink-0" />
+            <span>AI Investigator is thinking...</span>
           </div>
         )}
 
-        {/* Messages List Area */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs sm:text-sm">
-          
-          {messages.map((msg) => {
-            const isUser = msg.role === 'user';
-            const isReport = msg.content.includes('INVESTIGATION SUMMARY');
+        <div ref={messagesEndRef} />
+      </div>
 
+      {/* Quick Action Pills & Input Bar */}
+      <div className="p-3 border-t border-[#E5E7EB] dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur space-y-2.5 shrink-0">
+        
+        {/* Quick Actions Carousel */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+          {quickActions.map((action, idx) => {
+            const Icon = action.icon;
             return (
-              <div 
-                key={msg.id} 
-                className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} space-y-1.5`}
+              <button
+                key={idx}
+                onClick={() => handleSendMessage(action.label)}
+                disabled={isLoading}
+                className="whitespace-nowrap px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:border-blue-300 dark:hover:border-blue-700 text-slate-700 dark:text-slate-300 text-[11px] font-medium transition-colors flex items-center gap-1 shrink-0 cursor-pointer disabled:opacity-50"
               >
-                <div className={`max-w-[90%] sm:max-w-[85%] rounded-2xl p-4 transition-all shadow-xs ${
-                  isUser 
-                    ? 'bg-[#2563EB] text-white rounded-br-none' 
-                    : 'bg-white dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-bl-none'
-                }`}>
-                  
-                  {/* Assistant Header Icon if Assistant */}
-                  {!isUser && (
-                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-slate-700/80">
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>AI Investigator</span>
-                      </div>
-                      
-                      {/* Copy Action for Summaries or Answers */}
-                      <button
-                        onClick={() => handleCopy(msg.id, msg.content)}
-                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center gap-1 text-[11px]"
-                        title="Copy explanation"
-                      >
-                        {copiedId === msg.id ? (
-                          <>
-                            <Check className="w-3 h-3 text-emerald-500" />
-                            <span className="text-emerald-500 font-medium">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3 h-3" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Formatted Markdown Content */}
-                  <div className="whitespace-pre-wrap leading-relaxed font-sans text-xs sm:text-sm">
-                    {msg.content.split('\n').map((paragraph, pIdx) => {
-                      if (!paragraph.trim()) return <div key={pIdx} className="h-2" />;
-                      return (
-                        <p key={pIdx} className="mb-1.5 last:mb-0">
-                          {paragraph}
-                        </p>
-                      );
-                    })}
-                  </div>
-
-                </div>
-
-                <span className="text-[10px] text-slate-400 px-1">
-                  {msg.timestamp}
-                </span>
-              </div>
+                <Icon className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                <span>{action.label}</span>
+              </button>
             );
           })}
-
-          {/* Loading Typing Indicator */}
-          {isLoading && (
-            <div className="flex items-center gap-3 p-3.5 bg-white dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700 rounded-2xl rounded-bl-none max-w-[80%] text-xs text-blue-600 dark:text-blue-400 font-medium animate-pulse">
-              <Sparkles className="w-4 h-4 animate-spin" />
-              <span>✨ Trust Vision AI is analyzing...</span>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Action Pills & Input Bar */}
-        <div className="p-4 border-t border-[#E5E7EB] dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur space-y-3">
-          
-          {/* Quick Actions Carousel / Flex Wrap */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-            {quickActions.map((action, idx) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => handleSendMessage(action.label)}
-                  disabled={isLoading}
-                  className="whitespace-nowrap px-2.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:border-blue-300 dark:hover:border-blue-700 text-slate-700 dark:text-slate-300 text-[11px] font-medium transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
-                >
-                  <Icon className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                  <span>{action.label}</span>
-                </button>
-              );
-            })}
-          </div>
+        {/* Form Input Bar */}
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
+          className="flex items-center gap-2"
+        >
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder="Ask about this analysis..."
+            disabled={isLoading}
+            className="flex-1 h-10 px-3 text-xs bg-white dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 dark:text-slate-100 placeholder-slate-400 transition-colors"
+          />
 
-          {/* Form Input Bar */}
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSendMessage();
-            }}
-            className="flex items-center gap-2"
+          <button
+            type="submit"
+            disabled={isLoading || !inputMessage.trim()}
+            className="h-10 w-10 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white rounded-xl flex items-center justify-center transition-colors shrink-0 cursor-pointer disabled:cursor-not-allowed"
+            title="Send prompt"
           >
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Ask about this analysis..."
-              disabled={isLoading}
-              className="flex-1 h-11 px-3.5 text-xs sm:text-sm bg-white dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 dark:text-slate-100 placeholder-slate-400 transition-colors"
-            />
+            {isLoading ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Send className="w-3.5 h-3.5" />
+            )}
+          </button>
+        </form>
 
-            <button
-              type="submit"
-              disabled={isLoading || !inputMessage.trim()}
-              className="h-11 w-11 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white rounded-xl flex items-center justify-center transition-colors shrink-0 cursor-pointer disabled:cursor-not-allowed"
-              title="Send prompt"
-            >
-              {isLoading ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </button>
-          </form>
+      </div>
 
-        </div>
-
-      </aside>
-    </>
+    </div>
   );
 }
