@@ -5,17 +5,33 @@ import {
   FileSearch, 
   History, 
   Settings, 
-  FolderCheck,
+  LogOut,
   X
 } from 'lucide-react';
 
-export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobileOpen }) {
+export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobileOpen, currentUser, onLogout }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'analyze', label: 'Analyze', icon: FileSearch },
     { id: 'history', label: 'History', icon: History },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
+
+  // Helper to extract initials
+  const getInitials = () => {
+    if (!currentUser) return 'TV';
+    if (currentUser.name) {
+      const parts = currentUser.name.trim().split(' ');
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return currentUser.name.substring(0, 2).toUpperCase();
+    }
+    if (currentUser.email) return currentUser.email.substring(0, 2).toUpperCase();
+    if (currentUser.phone) return 'PH';
+    return 'TV';
+  };
+
+  const displayName = currentUser?.name || currentUser?.email || currentUser?.phone || 'Security Analyst';
+  const displaySubtext = currentUser?.email || currentUser?.phone || currentUser?.role || 'Verified Workspace';
 
   return (
     <>
@@ -88,25 +104,35 @@ export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobile
           </nav>
         </div>
 
-        {/* Bottom Section: Workspace Info */}
-        <div className="p-4 border-t border-[#E5E7EB] bg-slate-50/50">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-600 font-semibold text-xs font-mono">
-              LW
+        {/* Bottom Section: Authenticated User & Sign Out */}
+        <div className="p-4 border-t border-[#E5E7EB] bg-slate-50/60 space-y-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 border border-blue-700 text-white font-bold text-xs flex items-center justify-center shrink-0">
+              {getInitials()}
             </div>
-            <div className="overflow-hidden">
-              <div className="text-xs font-semibold text-slate-800 truncate">
-                Local Workspace
+            <div className="overflow-hidden flex-1">
+              <div className="text-xs font-semibold text-slate-900 truncate">
+                {displayName}
               </div>
-              <div className="text-[11px] text-slate-500 truncate flex items-center gap-1">
-                <FolderCheck className="w-3 h-3 text-emerald-600 shrink-0" />
-                <span>Media Integrity Environment</span>
+              <div className="text-[11px] text-slate-500 truncate">
+                {displaySubtext}
               </div>
             </div>
           </div>
+
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 text-xs font-medium text-slate-700 transition-colors cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
+            </button>
+          )}
         </div>
 
       </aside>
     </>
   );
 }
+

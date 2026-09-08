@@ -292,3 +292,203 @@ export function getDashboardMetrics() {
     avgConfidence
   };
 }
+
+/**
+ * Authentication & Session Management Architecture
+ */
+const USER_STORAGE_KEY = 'trustvision_user';
+const TOKEN_STORAGE_KEY = 'trustvision_token';
+
+export function getStoredSession() {
+  try {
+    const rawUser = localStorage.getItem(USER_STORAGE_KEY);
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (!rawUser || !token) return null;
+    return {
+      user: JSON.parse(rawUser),
+      token
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+export function clearSession() {
+  try {
+    localStorage.removeItem(USER_STORAGE_KEY);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  } catch (e) {}
+}
+
+export function saveSession(user, token) {
+  try {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  } catch (e) {}
+}
+
+/**
+ * Authenticate with Email & Password
+ */
+export async function loginWithEmail(email, password) {
+  if (!email || !password) {
+    return { success: false, error: 'Please enter both email and password.' };
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+    const endpointCandidates = [
+      `${BASE_URL}/api/v1/auth/login`,
+      `${BASE_URL}/auth/login`
+    ];
+
+    for (const url of endpointCandidates) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+          signal: controller.signal
+        });
+
+        if (response.ok) {
+          clearTimeout(timeoutId);
+          const data = await response.json();
+          const user = data.user || { email, name: email.split('@')[0], role: 'Security Analyst' };
+          const token = data.token || `tv_token_${Math.random().toString(36).substring(2)}`;
+          saveSession(user, token);
+          return { success: true, user, token };
+        } else if (response.status === 401 || response.status === 400) {
+          clearTimeout(timeoutId);
+          const errData = await response.json().catch(() => ({}));
+          return { success: false, error: errData.detail || errData.message || 'The email or password is incorrect.' };
+        }
+      } catch (err) {}
+    }
+    clearTimeout(timeoutId);
+  } catch (err) {}
+
+  // Development Fallback check
+  if (import.meta.env.DEV) {
+    const userName = email.split('@')[0] || 'analyst';
+    const user = {
+      email,
+      name: userName.charAt(0).toUpperCase() + userName.slice(1),
+      role: 'Enterprise Security Analyst',
+      isDevSession: true
+    };
+    const token = `dev_token_${Date.now()}`;
+    saveSession(user, token);
+    return { success: true, user, token, isDevStandalone: true };
+  }
+
+  return { success: false, error: 'Unable to connect to the authentication service. Please try again.' };
+}
+
+/**
+ * Request Phone OTP
+ */
+export async function requestPhoneOTP(phone) {
+  if (!phone) {
+    return { success: false, error: 'Please enter a valid phone number.' };
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const endpointCandidates = [
+      `${BASE_URL}/api/v1/auth/request-otp`,
+      `${BASE_URL}/auth/request-otp`
+    ];
+
+    for (const url of endpointCandidates) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone }),
+          signal: controller.signal
+        });
+
+        if (response.ok) {
+          clearTimeout(timeoutId);
+          const data = await response.json();
+          return { success: true, message: data.message || 'OTP sent successfully.' };
+        }
+      } catch (err) {}
+    }
+    clearTimeout(timeoutId);
+  } catch (err) {}
+
+  if (import.meta.env.DEV) {
+    return { success: true, message: 'Development mode OTP simulated', isDevStandalone: true };
+  }
+
+  return { success: false, error: 'Unable to connect to the authentication service. Please try again.' };
+}
+
+/**
+ * Verify Phone OTP & Establish Session
+ */
+export async function loginWithPhone(phone, otpCode) {
+  if (!phone || !otpCode || otpCode.length < 6) {
+    return { success: false, error: 'The verification code is incorrect. Please try again.' };
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+    const endpointCandidates = [
+      `${BASE_URL}/api/v1/auth/verify-otp`,
+      `${BASE_URL}/auth/verify-otp`
+    ];
+
+    for (const url of endpointCandidates) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, otp: otpCode }),
+          signal: controller.signal
+        });
+
+        if (response.ok) {
+          clearTimeout(timeoutId);
+          const data = await response.json();
+          const user = data.user || { phone, name: `User ${phone.slice(-4)}`, role: 'Security Analyst' };
+          const token = data.token || `tv_token_${Math.random().toString(36).substring(2)}`;
+          saveSession(user, token);
+          return { success: true, user, token };
+        } else if (response.status === 400 || response.status === 401) {
+          clearTimeout(timeoutId);
+          const errData = await response.json().catch(() => ({}));
+          return { success: false, error: errData.detail || errData.message || 'The verification code is incorrect. Please try again.' };
+        }
+      } catch (err) {}
+    }
+    clearTimeout(timeoutId);
+  } catch (err) {}
+
+  if (import.meta.env.DEV) {
+    if (otpCode === '000000') {
+      return { success: false, error: 'The verification code is incorrect. Please try again.' };
+    }
+    const user = {
+      phone,
+      email: `user_${phone.replace(/\D/g, '').slice(-6)}@trustvision.ai`,
+      name: `User (${phone.slice(-4)})`,
+      role: 'Enterprise Security Analyst',
+      isDevSession: true
+    };
+    const token = `dev_phone_token_${Date.now()}`;
+    saveSession(user, token);
+    return { success: true, user, token, isDevStandalone: true };
+  }
+
+  return { success: false, error: 'Unable to connect to the authentication service. Please try again.' };
+}
+

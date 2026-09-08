@@ -1,7 +1,7 @@
 import React from 'react';
-import { Menu, RefreshCw } from 'lucide-react';
+import { Menu, RefreshCw, LogOut, User } from 'lucide-react';
 
-export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, onToggleMobile }) {
+export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, onToggleMobile, currentUser, onLogout }) {
   const getBreadcrumb = () => {
     switch (activeTab) {
       case 'analyze':
@@ -14,6 +14,17 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
       default:
         return 'Media Integrity Overview';
     }
+  };
+
+  const getInitials = () => {
+    if (!currentUser) return 'TV';
+    if (currentUser.name) {
+      const parts = currentUser.name.trim().split(' ');
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return currentUser.name.substring(0, 2).toUpperCase();
+    }
+    if (currentUser.email) return currentUser.email.substring(0, 2).toUpperCase();
+    return 'TV';
   };
 
   return (
@@ -29,7 +40,7 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
         </button>
 
         <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-          <span className="hidden sm:inline">TrustVision</span>
+          <span className="hidden sm:inline text-slate-400 font-semibold">TrustVision</span>
           <span className="hidden sm:inline text-slate-300">/</span>
           <span className="text-slate-900 font-semibold text-sm">
             {getBreadcrumb()}
@@ -37,7 +48,7 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
         </div>
       </div>
 
-      {/* Right: System Health */}
+      {/* Right: System Health & User Info */}
       <div className="flex items-center gap-3">
         <button
           onClick={onRefreshHealth}
@@ -49,11 +60,32 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
           }`}
         >
           <span className={`w-1.5 h-1.5 rounded-full ${backendStatus?.online ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
-          <span>{backendStatus?.online ? 'Backend Connected' : 'Standalone Mode'}</span>
+          <span className="hidden xs:inline">{backendStatus?.online ? 'Backend Connected' : 'Standalone Mode'}</span>
           <RefreshCw className="w-3 h-3 text-slate-400 hover:text-slate-600 ml-0.5" />
         </button>
+
+        {currentUser && (
+          <div className="flex items-center gap-2 pl-2 border-l border-[#E5E7EB]">
+            <div 
+              title={currentUser.email || currentUser.name}
+              className="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-[11px] flex items-center justify-center shadow-xs"
+            >
+              {getInitials()}
+            </div>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                title="Sign Out of TrustVision"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
     </header>
   );
 }
+
