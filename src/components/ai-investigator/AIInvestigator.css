@@ -1,87 +1,175 @@
-/* Trust Vision AI Investigator Floating Action Button (FAB) & Panel Styles */
+/* ==========================================================================
+   Trust Vision AI Investigator — Floating Action Button & Panel Styles
+   
+   Button uses Uiverse.io metallic/glass design.
+   Scoped under .ai-fab-btn to avoid conflicts with generic .button classes.
+   ========================================================================== */
 
-.ai-investigator-fab {
+/* --------------------------------------------------------------------------
+   1. FAB WRAPPER — Viewport-Fixed, Draggable
+   -------------------------------------------------------------------------- */
+
+.ai-fab-btn {
+  all: unset;
+  cursor: grab;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: 32px;
   z-index: 9999;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-radius: 9999px;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  display: inline-block;
+  max-width: max-content;
   font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  cursor: grab;
+  border-radius: 100em;
+  background-color: rgba(0, 0, 0, 0.75);
+  box-shadow:
+    -0.15em -0.15em 0.15em -0.075em rgba(5, 5, 5, 0.25),
+    0.0375em 0.0375em 0.0675em 0 rgba(5, 5, 5, 0.1);
   user-select: none;
+  -webkit-user-select: none;
   touch-action: none;
-  outline: none;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  background: #0F172A;
-  color: #FFFFFF;
-  box-shadow: 
-    0 10px 25px -5px rgba(15, 23, 42, 0.3),
-    0 8px 10px -6px rgba(15, 23, 42, 0.2);
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.ai-investigator-fab:active {
+.ai-fab-btn:active {
   cursor: grabbing;
 }
 
-/* Light Theme Styling */
-.ai-investigator-fab {
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+/* --------------------------------------------------------------------------
+   2. ACCESSIBILITY — Restore focus-visible after `all: unset`
+   -------------------------------------------------------------------------- */
+
+.ai-fab-btn:focus-visible {
+  outline: 3px solid #3B82F6;
+  outline-offset: 4px;
 }
 
-.ai-investigator-fab:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 
-    0 14px 28px -4px rgba(15, 23, 42, 0.35),
-    0 10px 12px -6px rgba(15, 23, 42, 0.25);
-  background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+/* --------------------------------------------------------------------------
+   3. PSEUDO-ELEMENT — Metallic gradient overlay
+   -------------------------------------------------------------------------- */
+
+.ai-fab-btn::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    -135deg,
+    rgba(5, 5, 5, 0.5),
+    transparent 20%,
+    transparent 100%
+  );
+  filter: blur(0.0125em);
+  opacity: 0.25;
+  mix-blend-mode: multiply;
 }
 
-.ai-investigator-fab:focus-visible {
-  ring: 2px solid #2563EB;
-  outline: 2px solid #2563EB;
-  outline-offset: 3px;
+/* --------------------------------------------------------------------------
+   4. BUTTON-OUTER — Depth shadow ring
+   -------------------------------------------------------------------------- */
+
+.ai-fab-btn .button-outer {
+  display: block;
+  position: relative;
+  z-index: 1;
+  border-radius: inherit;
+  transition: box-shadow 300ms ease;
+  will-change: box-shadow;
+  box-shadow:
+    0 0.05em 0.05em -0.01em rgba(5, 5, 5, 1),
+    0 0.01em 0.01em -0.01em rgba(5, 5, 5, 0.5),
+    0.15em 0.3em 0.1em -0.01em rgba(5, 5, 5, 0.25);
 }
 
-/* Open Active State */
-.ai-investigator-fab.is-open {
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-  border-color: rgba(147, 197, 253, 0.4);
-  box-shadow: 
-    0 10px 25px -5px rgba(37, 99, 235, 0.4),
-    0 0 15px rgba(37, 99, 235, 0.3);
+.ai-fab-btn:hover .button-outer {
+  box-shadow:
+    0 0 0 0 rgba(5, 5, 5, 1),
+    0 0 0 0 rgba(5, 5, 5, 0.5),
+    0 0 0 0 rgba(5, 5, 5, 0.25);
 }
 
-/* Dark Mode Overrides */
-.dark .ai-investigator-fab {
-  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-  color: #F8FAFC;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  box-shadow: 
-    0 10px 25px -5px rgba(0, 0, 0, 0.6),
-    0 0 20px rgba(59, 130, 246, 0.15);
+/* --------------------------------------------------------------------------
+   5. BUTTON-INNER — Metallic face with inset shadows & clip-path
+   -------------------------------------------------------------------------- */
+
+.ai-fab-btn .button-inner {
+  --inset: 0.035em;
+  display: block;
+  position: relative;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 0.7em 1.25em;
+  background-image: linear-gradient(
+    135deg,
+    rgba(245, 245, 247, 1),
+    rgba(200, 205, 215, 1)
+  );
+  transition:
+    box-shadow 300ms ease,
+    clip-path 250ms ease,
+    background-image 250ms ease,
+    transform 250ms ease;
+  will-change: box-shadow, clip-path, background-image, transform;
+  overflow: clip;
+  clip-path: inset(0 0 0 0 round 100em);
+  box-shadow:
+    0 0 0 0 inset rgba(5, 5, 5, 0.1),
+    -0.05em -0.05em 0.05em 0 inset rgba(5, 5, 5, 0.25),
+    0 0 0 0 inset rgba(5, 5, 5, 0.1),
+    0 0 0.05em 0.2em inset rgba(255, 255, 255, 0.25),
+    0.025em 0.05em 0.1em 0 inset rgba(255, 255, 255, 1),
+    0.12em 0.12em 0.12em inset rgba(255, 255, 255, 0.25),
+    -0.075em -0.25em 0.25em 0.1em inset rgba(5, 5, 5, 0.25);
 }
 
-.dark .ai-investigator-fab:hover {
-  border-color: rgba(59, 130, 246, 0.6);
-  background: linear-gradient(135deg, #2563EB 0%, #1E293B 100%);
+.ai-fab-btn:hover .button-inner {
+  clip-path: inset(
+    clamp(1px, 0.0625em, 2px) clamp(1px, 0.0625em, 2px)
+      clamp(1px, 0.0625em, 2px) clamp(1px, 0.0625em, 2px) round 100em
+  );
+  box-shadow:
+    0.1em 0.15em 0.05em 0 inset rgba(5, 5, 5, 0.75),
+    -0.025em -0.03em 0.05em 0.025em inset rgba(5, 5, 5, 0.5),
+    0.25em 0.25em 0.2em 0 inset rgba(5, 5, 5, 0.5),
+    0 0 0.05em 0.5em inset rgba(255, 255, 255, 0.15),
+    0 0 0 0 inset rgba(255, 255, 255, 1),
+    0.12em 0.12em 0.12em inset rgba(255, 255, 255, 0.25),
+    -0.075em -0.12em 0.2em 0.1em inset rgba(5, 5, 5, 0.25);
 }
 
-.dark .ai-investigator-fab.is-open {
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-  border-color: #60A5FA;
+.ai-fab-btn:active .button-inner {
+  transform: scale(0.975);
 }
 
-/* Floating AI Chatbot Panel Window */
+/* --------------------------------------------------------------------------
+   6. LABEL TEXT — Gradient text with icon
+   -------------------------------------------------------------------------- */
+
+.ai-fab-btn .button-inner span {
+  position: relative;
+  z-index: 4;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+  user-select: none;
+  line-height: 1.2;
+  transition: transform 250ms ease;
+}
+
+.ai-fab-btn:hover .button-inner span {
+  transform: scale(0.98);
+}
+
+/* --------------------------------------------------------------------------
+   7. FLOATING AI CHATBOT PANEL WINDOW
+   -------------------------------------------------------------------------- */
+
 .ai-investigator-panel {
   position: fixed;
   right: 24px;
@@ -95,7 +183,7 @@
   background: #FFFFFF;
   color: #0F172A;
   border: 1px solid #E2E8F0;
-  box-shadow: 
+  box-shadow:
     0 20px 25px -5px rgba(15, 23, 42, 0.15),
     0 8px 10px -6px rgba(15, 23, 42, 0.1);
   display: flex;
@@ -108,7 +196,7 @@
   background: #0F172A;
   color: #F8FAFC;
   border-color: #1E293B;
-  box-shadow: 
+  box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.7),
     0 0 1px 1px rgba(255, 255, 255, 0.05);
 }
@@ -124,13 +212,22 @@
   }
 }
 
-/* Responsive Positioning */
+/* --------------------------------------------------------------------------
+   8. RESPONSIVE — Mobile positioning
+   -------------------------------------------------------------------------- */
+
 @media (max-width: 640px) {
-  .ai-investigator-fab {
+  .ai-fab-btn {
     right: 16px;
     bottom: 16px;
-    padding: 10px 16px;
-    font-size: 13px;
+  }
+
+  .ai-fab-btn .button-inner {
+    padding: 0.6em 1em;
+  }
+
+  .ai-fab-btn .button-inner span {
+    font-size: 12.5px;
   }
 
   .ai-investigator-panel {
@@ -144,9 +241,15 @@
   }
 }
 
-/* Motion Preferences */
+/* --------------------------------------------------------------------------
+   9. MOTION PREFERENCES
+   -------------------------------------------------------------------------- */
+
 @media (prefers-reduced-motion: reduce) {
-  .ai-investigator-fab,
+  .ai-fab-btn,
+  .ai-fab-btn .button-outer,
+  .ai-fab-btn .button-inner,
+  .ai-fab-btn .button-inner span,
   .ai-investigator-panel {
     transition: none !important;
     animation: none !important;

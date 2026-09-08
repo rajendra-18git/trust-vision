@@ -1,14 +1,18 @@
 import React, { useRef, useState } from 'react';
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 /**
  * Trust Vision AI Investigator Floating Action Button (FAB)
+ * 
+ * Uses Uiverse.io metallic/glass design.
  * Fixed to the viewport at z-index: 9999.
  * MUST REMAIN MOUNTED AT ALL TIMES REGARDLESS OF PANEL VISIBILITY.
+ * 
+ * Supports mouse drag, touch drag, click, and keyboard activation.
  */
 export default function AIInvestigatorButton({ isOpen, onClick }) {
   const [customPos, setCustomPos] = useState(null);
-  
+
   const buttonRef = useRef(null);
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
@@ -129,8 +133,13 @@ export default function AIInvestigatorButton({ isOpen, onClick }) {
       type="button"
       style={
         customPos
-          ? { left: `${customPos.x}px`, top: `${customPos.y}px`, bottom: 'auto', right: 'auto' }
-          : {}
+          ? {
+              left: `${customPos.x}px`,
+              top: `${customPos.y}px`,
+              right: 'auto',
+              bottom: 'auto',
+            }
+          : undefined
       }
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
@@ -139,20 +148,16 @@ export default function AIInvestigatorButton({ isOpen, onClick }) {
       aria-label={isOpen ? "Close AI Investigator" : "Open AI Investigator"}
       aria-expanded={isOpen}
       title={isOpen ? "Close AI Investigator Chat" : "Open AI Investigator Chat"}
-      className={`ai-investigator-fab ${isOpen ? 'is-open' : ''}`}
+      className="ai-fab-btn"
     >
-      <div className="flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-blue-400 shrink-0 animate-pulse" />
-        <span className="font-semibold text-sm whitespace-nowrap">
-          AI Investigator
+      <span className="button-outer">
+        <span className="button-inner">
+          <span>
+            <Sparkles className="w-4 h-4" style={{ display: 'inline', verticalAlign: 'middle' }} />
+            {' '}AI Investigator
+          </span>
         </span>
-      </div>
-
-      {isOpen && (
-        <span className="ml-1 text-xs opacity-80 border-l border-white/30 pl-2">
-          <X className="w-3.5 h-3.5 inline" />
-        </span>
-      )}
+      </span>
     </button>
   );
 }
