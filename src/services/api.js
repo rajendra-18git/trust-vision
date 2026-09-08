@@ -328,6 +328,22 @@ export function saveSession(user, token) {
 }
 
 /**
+ * Helper to check if current environment is local or development standalone mode
+ */
+function isLocalOrDevEnvironment() {
+  if (typeof window === 'undefined') return true;
+  const host = window.location.hostname;
+  return (
+    import.meta.env.DEV || 
+    import.meta.env.MODE === 'development' || 
+    host === 'localhost' || 
+    host === '127.0.0.1' || 
+    host === '::1' || 
+    host.endsWith('.local')
+  );
+}
+
+/**
  * Authenticate with Email & Password
  */
 export async function loginWithEmail(email, password) {
@@ -337,7 +353,7 @@ export async function loginWithEmail(email, password) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     const endpointCandidates = [
       `${BASE_URL}/api/v1/auth/login`,
@@ -370,8 +386,8 @@ export async function loginWithEmail(email, password) {
     clearTimeout(timeoutId);
   } catch (err) {}
 
-  // Development Fallback check
-  if (import.meta.env.DEV) {
+  // Local / Standalone Fallback when backend is offline
+  if (isLocalOrDevEnvironment()) {
     const userName = email.split('@')[0] || 'analyst';
     const user = {
       email,
@@ -397,7 +413,7 @@ export async function requestPhoneOTP(phone) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     const endpointCandidates = [
       `${BASE_URL}/api/v1/auth/request-otp`,
@@ -423,7 +439,7 @@ export async function requestPhoneOTP(phone) {
     clearTimeout(timeoutId);
   } catch (err) {}
 
-  if (import.meta.env.DEV) {
+  if (isLocalOrDevEnvironment()) {
     return { success: true, message: 'Development mode OTP simulated', isDevStandalone: true };
   }
 
@@ -440,7 +456,7 @@ export async function loginWithPhone(phone, otpCode) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     const endpointCandidates = [
       `${BASE_URL}/api/v1/auth/verify-otp`,
@@ -473,7 +489,7 @@ export async function loginWithPhone(phone, otpCode) {
     clearTimeout(timeoutId);
   } catch (err) {}
 
-  if (import.meta.env.DEV) {
+  if (isLocalOrDevEnvironment()) {
     if (otpCode === '000000') {
       return { success: false, error: 'The verification code is incorrect. Please try again.' };
     }
@@ -491,4 +507,5 @@ export async function loginWithPhone(phone, otpCode) {
 
   return { success: false, error: 'Unable to connect to the authentication service. Please try again.' };
 }
+
 
