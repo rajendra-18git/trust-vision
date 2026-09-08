@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DropZone from '../components/upload/DropZone';
 import StageProgress from '../components/analysis/StageProgress';
 import ResultDashboard from '../components/results/ResultDashboard';
 import { analyzeFile } from '../services/api';
 
-export default function AnalyzePage({ initialResultData, onClearActiveResult }) {
+export default function AnalyzePage({ initialResultData, onClearActiveResult, onOpenAssistant, onUpdateCurrentRecord }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStage, setCurrentStage] = useState('RECEIVING_FILE');
   const [progressPercent, setProgressPercent] = useState(0);
   const [resultData, setResultData] = useState(initialResultData || null);
   const [analysisError, setAnalysisError] = useState(null);
+
+  useEffect(() => {
+    if (initialResultData) {
+      setResultData(initialResultData);
+      if (onUpdateCurrentRecord) onUpdateCurrentRecord(initialResultData);
+    }
+  }, [initialResultData]);
 
   const handleFileSelected = (file) => {
     setSelectedFile(file);
@@ -22,6 +29,7 @@ export default function AnalyzePage({ initialResultData, onClearActiveResult }) 
     setResultData(null);
     setAnalysisError(null);
     if (onClearActiveResult) onClearActiveResult();
+    if (onUpdateCurrentRecord) onUpdateCurrentRecord(null);
   };
 
   const handleStartAnalysis = async () => {
@@ -39,6 +47,7 @@ export default function AnalyzePage({ initialResultData, onClearActiveResult }) 
       });
 
       setResultData(data);
+      if (onUpdateCurrentRecord) onUpdateCurrentRecord(data);
     } catch (error) {
       console.error('Analysis failed:', error);
       setAnalysisError('Unable to analyze this file. Please verify that the backend service is running and try again.');
@@ -53,6 +62,7 @@ export default function AnalyzePage({ initialResultData, onClearActiveResult }) 
     setIsAnalyzing(false);
     setAnalysisError(null);
     if (onClearActiveResult) onClearActiveResult();
+    if (onUpdateCurrentRecord) onUpdateCurrentRecord(null);
   };
 
   return (
@@ -64,6 +74,7 @@ export default function AnalyzePage({ initialResultData, onClearActiveResult }) 
           resultData={resultData}
           uploadedFile={selectedFile}
           onNewAnalysis={handleNewAnalysis}
+          onOpenAssistant={onOpenAssistant}
         />
       ) : isAnalyzing ? (
         /* If analyzing (Step 2) */
@@ -93,3 +104,4 @@ export default function AnalyzePage({ initialResultData, onClearActiveResult }) 
     </div>
   );
 }
+

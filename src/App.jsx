@@ -6,8 +6,10 @@ import AnalyzePage from './pages/AnalyzePage';
 import HistoryPage from './pages/HistoryPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
+import AIAssistantDrawer from './components/assistant/AIAssistantDrawer';
 import Footer from './components/common/Footer';
 import { checkBackendHealth, getStoredSession, clearSession } from './services/api';
+import { Sparkles } from 'lucide-react';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -24,6 +26,7 @@ export default function App() {
   const [backendStatus, setBackendStatus] = useState({ online: false, message: 'Checking...' });
   const [activeResultRecord, setActiveResultRecord] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
   // Clear any lingering dark class or theme overrides
   useEffect(() => {
@@ -74,7 +77,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] text-slate-900 font-sans flex flex-col">
+    <div className="min-h-screen bg-[#F7F8FA] dark:bg-[#0F172A] text-slate-900 dark:text-slate-100 font-sans flex flex-col relative">
       
       {/* Sidebar Shell */}
       <Sidebar 
@@ -97,6 +100,7 @@ export default function App() {
           onToggleMobile={() => setMobileOpen(true)}
           currentUser={currentUser}
           onLogout={handleLogout}
+          onOpenAssistant={() => setIsAssistantOpen(true)}
         />
 
         {/* Main Content Pages */}
@@ -105,6 +109,7 @@ export default function App() {
             <DashboardPage 
               onNavigateAnalyze={() => handleNavigateAnalyze('analyze')}
               onViewHistoryRecord={handleViewHistoryRecord}
+              onOpenAssistant={() => setIsAssistantOpen(true)}
             />
           )}
 
@@ -112,6 +117,8 @@ export default function App() {
             <AnalyzePage 
               initialResultData={activeResultRecord}
               onClearActiveResult={() => setActiveResultRecord(null)}
+              onOpenAssistant={() => setIsAssistantOpen(true)}
+              onUpdateCurrentRecord={(rec) => setActiveResultRecord(rec)}
             />
           )}
 
@@ -127,6 +134,23 @@ export default function App() {
           )}
         </main>
 
+        {/* Floating Quick Trigger for AI Investigator */}
+        <button
+          onClick={() => setIsAssistantOpen(true)}
+          title="Open Trust Vision AI Investigator"
+          className="fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-3 rounded-full shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 cursor-pointer border border-blue-500/50"
+        >
+          <Sparkles className="w-4 h-4 animate-pulse text-blue-200" />
+          <span className="hidden sm:inline">✨ AI Investigator</span>
+        </button>
+
+        {/* AI Assistant Drawer Component */}
+        <AIAssistantDrawer 
+          isOpen={isAssistantOpen}
+          onClose={() => setIsAssistantOpen(false)}
+          currentRecord={activeResultRecord}
+        />
+
         {/* Footer */}
         <Footer />
 
@@ -135,4 +159,5 @@ export default function App() {
     </div>
   );
 }
+
 

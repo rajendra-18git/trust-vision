@@ -10,12 +10,13 @@ import {
   FileText,
   Lock,
   Cpu,
-  FileCheck
+  FileCheck,
+  Sparkles
 } from 'lucide-react';
 import { getHistory, getDashboardMetrics } from '../services/api';
 import { formatDate, shortenHash } from '../utils/formatters';
 
-export default function DashboardPage({ onNavigateAnalyze, onViewHistoryRecord }) {
+export default function DashboardPage({ onNavigateAnalyze, onViewHistoryRecord, onOpenAssistant }) {
   const [historyItems, setHistoryItems] = useState([]);
   const [metrics, setMetrics] = useState({ totalAnalyses: 0, trustedCount: 0, suspiciousCount: 0, avgConfidence: 0 });
 
@@ -33,22 +34,35 @@ export default function DashboardPage({ onNavigateAnalyze, onViewHistoryRecord }
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#111827] tracking-tight font-sans">
+          <h1 className="text-2xl font-bold text-[#111827] dark:text-slate-100 tracking-tight font-sans">
             Media Integrity Overview
           </h1>
-          <p className="text-sm text-[#64748B] font-normal mt-0.5">
+          <p className="text-sm text-[#64748B] dark:text-slate-400 font-normal mt-0.5">
             Review recent integrity analyses and detected anomalies across media assets.
           </p>
         </div>
 
-        <button
-          onClick={onNavigateAnalyze}
-          className="px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white font-medium text-sm shadow-sm flex items-center justify-center gap-2 transition-all self-start sm:self-auto"
-        >
-          <FileSearch className="w-4 h-4" />
-          <span>Start New Analysis</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {onOpenAssistant && (
+            <button
+              onClick={onOpenAssistant}
+              className="px-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-[#E5E7EB] dark:border-slate-700 text-[#111827] dark:text-slate-100 font-semibold text-sm shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span>✨ AI Investigator</span>
+            </button>
+          )}
+
+          <button
+            onClick={onNavigateAnalyze}
+            className="px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white font-medium text-sm shadow-sm flex items-center justify-center gap-2 transition-all self-start sm:self-auto cursor-pointer"
+          >
+            <FileSearch className="w-4 h-4" />
+            <span>Start New Analysis</span>
+          </button>
+        </div>
       </div>
+
 
       {/* Compact Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

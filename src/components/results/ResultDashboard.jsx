@@ -10,14 +10,15 @@ import {
   ArrowLeft, 
   ChevronDown, 
   ChevronUp, 
-  CheckCircle2
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 import ImageResultView from './ImageResultView';
 import VideoResultView from './VideoResultView';
 import DocumentResultView from './DocumentResultView';
 import { formatBytes } from '../../utils/hash';
 
-export default function ResultDashboard({ resultData, uploadedFile, onNewAnalysis }) {
+export default function ResultDashboard({ resultData, uploadedFile, onNewAnalysis, onOpenAssistant }) {
   const [copiedHash, setCopiedHash] = useState(false);
   const [openAccordions, setOpenAccordions] = useState({
     fileInfo: false,
@@ -96,10 +97,20 @@ export default function ResultDashboard({ resultData, uploadedFile, onNewAnalysi
           </h1>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {onOpenAssistant && (
+            <button
+              onClick={onOpenAssistant}
+              className="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>✨ AI Investigator</span>
+            </button>
+          )}
+
           <button
             onClick={handlePrintReport}
-            className="px-3.5 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#CBD5E1] text-[#111827] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors"
+            className="px-3.5 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#CBD5E1] text-[#111827] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
           >
             <Printer className="w-4 h-4 text-[#64748B]" />
             <span>Download Report</span>
@@ -107,10 +118,10 @@ export default function ResultDashboard({ resultData, uploadedFile, onNewAnalysi
 
           <button
             onClick={onNewAnalysis}
-            className="px-4 py-2 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors"
+            className="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 border border-[#CBD5E1] text-[#111827] text-xs font-medium flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Analyze Another File</span>
+            <ArrowLeft className="w-4 h-4 text-[#64748B]" />
+            <span>New Analysis</span>
           </button>
         </div>
       </div>
