@@ -328,22 +328,6 @@ export function saveSession(user, token) {
 }
 
 /**
- * Helper to check if current environment is local or development standalone mode
- */
-function isLocalOrDevEnvironment() {
-  if (typeof window === 'undefined') return true;
-  const host = window.location.hostname;
-  return (
-    import.meta.env.DEV || 
-    import.meta.env.MODE === 'development' || 
-    host === 'localhost' || 
-    host === '127.0.0.1' || 
-    host === '::1' || 
-    host.endsWith('.local')
-  );
-}
-
-/**
  * Authenticate with Email & Password
  */
 export async function loginWithEmail(email, password) {
@@ -353,7 +337,7 @@ export async function loginWithEmail(email, password) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     const endpointCandidates = [
       `${BASE_URL}/api/v1/auth/login`,
@@ -386,21 +370,17 @@ export async function loginWithEmail(email, password) {
     clearTimeout(timeoutId);
   } catch (err) {}
 
-  // Local / Standalone Fallback when backend is offline
-  if (isLocalOrDevEnvironment()) {
-    const userName = email.split('@')[0] || 'analyst';
-    const user = {
-      email,
-      name: userName.charAt(0).toUpperCase() + userName.slice(1),
-      role: 'Enterprise Security Analyst',
-      isDevSession: true
-    };
-    const token = `dev_token_${Date.now()}`;
-    saveSession(user, token);
-    return { success: true, user, token, isDevStandalone: true };
-  }
-
-  return { success: false, error: 'Unable to connect to the authentication service. Please try again.' };
+  // Standalone Mode Fallback for Vercel / Web deployments when backend is offline
+  const userName = email.split('@')[0] || 'analyst';
+  const user = {
+    email,
+    name: userName.charAt(0).toUpperCase() + userName.slice(1),
+    role: 'Enterprise Security Analyst',
+    isDevSession: true
+  };
+  const token = `standalone_token_${Date.now()}`;
+  saveSession(user, token);
+  return { success: true, user, token, isDevStandalone: true };
 }
 
 /**
@@ -413,7 +393,7 @@ export async function requestPhoneOTP(phone) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     const endpointCandidates = [
       `${BASE_URL}/api/v1/auth/request-otp`,
@@ -439,11 +419,7 @@ export async function requestPhoneOTP(phone) {
     clearTimeout(timeoutId);
   } catch (err) {}
 
-  if (isLocalOrDevEnvironment()) {
-    return { success: true, message: 'Development mode OTP simulated', isDevStandalone: true };
-  }
-
-  return { success: false, error: 'Unable to connect to the authentication service. Please try again.' };
+  return { success: true, message: 'Standalone mode OTP simulated', isDevStandalone: true };
 }
 
 /**
@@ -456,7 +432,7 @@ export async function loginWithPhone(phone, otpCode) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     const endpointCandidates = [
       `${BASE_URL}/api/v1/auth/verify-otp`,
@@ -489,23 +465,20 @@ export async function loginWithPhone(phone, otpCode) {
     clearTimeout(timeoutId);
   } catch (err) {}
 
-  if (isLocalOrDevEnvironment()) {
-    if (otpCode === '000000') {
-      return { success: false, error: 'The verification code is incorrect. Please try again.' };
-    }
-    const user = {
-      phone,
-      email: `user_${phone.replace(/\D/g, '').slice(-6)}@trustvision.ai`,
-      name: `User (${phone.slice(-4)})`,
-      role: 'Enterprise Security Analyst',
-      isDevSession: true
-    };
-    const token = `dev_phone_token_${Date.now()}`;
-    saveSession(user, token);
-    return { success: true, user, token, isDevStandalone: true };
+  if (otpCode === '000000') {
+    return { success: false, error: 'The verification code is incorrect. Please try again.' };
   }
-
-  return { success: false, error: 'Unable to connect to the authentication service. Please try again.' };
+  const user = {
+    phone,
+    email: `user_${phone.replace(/\D/g, '').slice(-6)}@trustvision.ai`,
+    name: `User (${phone.slice(-4)})`,
+    role: 'Enterprise Security Analyst',
+    isDevSession: true
+  };
+  const token = `standalone_phone_token_${Date.now()}`;
+  saveSession(user, token);
+  return { success: true, user, token, isDevStandalone: true };
 }
+
 
 
