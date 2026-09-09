@@ -243,7 +243,7 @@ class AIAssistantService:
                 logger.warning(f"Could not parse .env file: {err}")
 
         api_key = os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY")
-        model_name = os.getenv("LLM_MODEL", "gemini-1.5-flash")
+        model_name = os.getenv("LLM_MODEL", "gemini-3.6-flash")
         return api_key, model_name
 
     def __init__(self):
@@ -262,10 +262,36 @@ class AIAssistantService:
         evidence_context = build_evidence_context(analysis_data or {})
         api_key, model_name = self._get_api_key_and_model()
         
-        # 1. External Gemini API via google.generativeai or REST API
+        # 1. External Gemini API via google.genai, google.generativeai, or REST API
         if api_key:
+            # Try new google.genai SDK
             try:
-                # Try google.generativeai library if installed
+                from google import genai
+                from google.genai import types
+                client = genai.Client(api_key=api_key)
+                prompt_content = f"""EVIDENCE CONTEXT:
+{json.dumps(evidence_context, indent=2)}
+
+USER QUESTION:
+{message}"""
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt_content,
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT
+                    )
+                )
+                if response and response.text:
+                    return {
+                        "reply": response.text,
+                        "evidence_used": evidence_context,
+                        "provider": f"GEMINI_GENAI_{model_name.upper()}"
+                    }
+            except Exception as genai_err:
+                logger.debug(f"google.genai SDK call failed ({genai_err}). Trying legacy SDK / REST.")
+
+            # Try google.generativeai SDK if available
+            try:
                 import google.generativeai as genai
                 genai.configure(api_key=api_key)
                 model = genai.GenerativeModel(
@@ -289,9 +315,14 @@ USER QUESTION:
             except Exception as e:
                 logger.warning(f"Google GenerativeAI SDK call failed ({e}). Attempting REST API call.")
                 
-                # REST API fallback for Gemini
+            # REST API fallback for Gemini (attempts configured model first, then candidate fallbacks)
+            candidate_models = [model_name, "gemini-3.6-flash", "gemini-2.5-flash", "gemini-flash-latest"]
+            # Deduplicate preserving order
+            candidate_models = list(dict.fromkeys(candidate_models))
+
+            for target_model in candidate_models:
                 try:
-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:generateContent?key={api_key}"
                     payload = {
                         "contents": [{
                             "parts": [{
@@ -305,16 +336,16 @@ USER QUESTION:
                         headers={'Content-Type': 'application/json'},
                         method='POST'
                     )
-                    with urllib.request.urlopen(req, timeout=10) as resp:
+                    with urllib.request.urlopen(req, timeout=12) as resp:
                         res_data = json.loads(resp.read().decode('utf-8'))
                         reply_text = res_data['candidates'][0]['content']['parts'][0]['text']
                         return {
                             "reply": reply_text,
                             "evidence_used": evidence_context,
-                            "provider": "GEMINI_REST_API"
+                            "provider": f"GEMINI_REST_API_{target_model.upper()}"
                         }
                 except Exception as rest_err:
-                    logger.warning(f"Gemini REST API call failed ({rest_err}). Falling back to trained forensic engine.")
+                    logger.warning(f"Gemini REST API call for model '{target_model}' failed ({rest_err}). Trying next model.")
 
         # 2. Evidence-grounded forensic response engine
         reply_text = generate_forensic_answer(message, evidence_context)
