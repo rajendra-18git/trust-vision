@@ -1,5 +1,6 @@
 import React from 'react';
-import { Menu, RefreshCw, LogOut, Sparkles } from 'lucide-react';
+import { Menu, RefreshCw, Sparkles } from 'lucide-react';
+import LogoutButton from '../common/LogoutButton';
 
 export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, onToggleMobile, currentUser, onLogout, onOpenAssistant }) {
   const getBreadcrumb = () => {
@@ -86,13 +87,7 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
               {getInitials()}
             </div>
             {onLogout && (
-              <button
-                onClick={onLogout}
-                title="Sign Out of TrustVision"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+              <LogoutButton onLogout={onLogout} />
             )}
           </div>
         )}

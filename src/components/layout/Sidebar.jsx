@@ -5,9 +5,9 @@ import {
   FileSearch, 
   History, 
   Settings, 
-  LogOut,
   X
 } from 'lucide-react';
+import LogoutButton from '../common/LogoutButton';
 
 export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobileOpen, currentUser, onLogout }) {
   const navItems = [
@@ -121,13 +121,9 @@ export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobile
           </div>
 
           {onLogout && (
-            <button
-              onClick={onLogout}
-              className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 text-xs font-medium text-slate-700 transition-colors cursor-pointer"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
-            </button>
+            <div className="flex justify-end pt-1">
+              <LogoutButton onLogout={onLogout} />
+            </div>
           )}
         </div>
 
