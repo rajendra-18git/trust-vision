@@ -226,9 +226,28 @@ Trust Vision employs a dual-stream architecture to evaluate `{filename}`:
 
 
 class AIAssistantService:
+    def _get_api_key_and_model(self):
+        # Load from .env file if present
+        env_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            k, v = k.strip(), v.strip().strip("'\"")
+                            if k:
+                                os.environ[k] = v
+            except Exception as err:
+                logger.warning(f"Could not parse .env file: {err}")
+
+        api_key = os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY")
+        model_name = os.getenv("LLM_MODEL", "gemini-1.5-flash")
+        return api_key, model_name
+
     def __init__(self):
-        self.api_key = os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY")
-        self.model_name = os.getenv("LLM_MODEL", "gemini-1.5-flash")
+        self.api_key, self.model_name = self._get_api_key_and_model()
 
     async def generate_response(
         self, 
@@ -241,15 +260,16 @@ class AIAssistantService:
         Uses configured LLM when API keys exist, or falls back to evidence-grounded forensic engine.
         """
         evidence_context = build_evidence_context(analysis_data or {})
+        api_key, model_name = self._get_api_key_and_model()
         
         # 1. External Gemini API via google.generativeai or REST API
-        if self.api_key:
+        if api_key:
             try:
                 # Try google.generativeai library if installed
                 import google.generativeai as genai
-                genai.configure(api_key=self.api_key)
+                genai.configure(api_key=api_key)
                 model = genai.GenerativeModel(
-                    model_name=self.model_name,
+                    model_name=model_name,
                     system_instruction=SYSTEM_PROMPT
                 )
                 
@@ -264,14 +284,14 @@ USER QUESTION:
                     return {
                         "reply": response.text,
                         "evidence_used": evidence_context,
-                        "provider": f"GEMINI_API_{self.model_name.upper()}"
+                        "provider": f"GEMINI_API_{model_name.upper()}"
                     }
             except Exception as e:
                 logger.warning(f"Google GenerativeAI SDK call failed ({e}). Attempting REST API call.")
                 
                 # REST API fallback for Gemini
                 try:
-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent?key={self.api_key}"
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
                     payload = {
                         "contents": [{
                             "parts": [{
