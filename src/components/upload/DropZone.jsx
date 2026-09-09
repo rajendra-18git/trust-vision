@@ -147,7 +147,7 @@ export default function DropZone({ onFileSelected, selectedFile, onClearFile, on
 
           <button
             type="button"
-            className="px-5 py-2.5 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white font-medium text-xs shadow-sm transition-colors mt-1"
+            className="trustvision-upload-btn mt-1"
           >
             Browse files
           </button>
