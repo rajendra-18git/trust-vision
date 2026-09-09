@@ -7,7 +7,6 @@ import {
   Settings, 
   X
 } from 'lucide-react';
-import LogoutButton from '../common/LogoutButton';
 
 export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobileOpen, currentUser, onLogout }) {
   const navItems = [
@@ -21,9 +20,10 @@ export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobile
   const getInitials = () => {
     if (!currentUser) return 'TV';
     if (currentUser.name) {
-      const parts = currentUser.name.trim().split(' ');
+      const cleanName = currentUser.name.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+      const parts = cleanName.split(/\s+/).filter(Boolean);
       if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-      return currentUser.name.substring(0, 2).toUpperCase();
+      if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     }
     if (currentUser.email) return currentUser.email.substring(0, 2).toUpperCase();
     if (currentUser.phone) return 'PH';
@@ -104,8 +104,8 @@ export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobile
           </nav>
         </div>
 
-        {/* Bottom Section: Authenticated User & Sign Out */}
-        <div className="p-4 border-t border-[#E5E7EB] bg-slate-50/60 space-y-3">
+        {/* Bottom Section: Authenticated User */}
+        <div className="p-4 border-t border-[#E5E7EB] bg-slate-50/60">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-blue-600 border border-blue-700 text-white font-bold text-xs flex items-center justify-center shrink-0">
               {getInitials()}
@@ -119,12 +119,6 @@ export default function Sidebar({ activeTab, setActiveTab, mobileOpen, setMobile
               </div>
             </div>
           </div>
-
-          {onLogout && (
-            <div className="flex justify-end pt-1">
-              <LogoutButton onLogout={onLogout} />
-            </div>
-          )}
         </div>
 
       </aside>

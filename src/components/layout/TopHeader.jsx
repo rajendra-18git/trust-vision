@@ -20,9 +20,10 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
   const getInitials = () => {
     if (!currentUser) return 'TV';
     if (currentUser.name) {
-      const parts = currentUser.name.trim().split(' ');
+      const cleanName = currentUser.name.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+      const parts = cleanName.split(/\s+/).filter(Boolean);
       if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-      return currentUser.name.substring(0, 2).toUpperCase();
+      if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     }
     if (currentUser.email) return currentUser.email.substring(0, 2).toUpperCase();
     return 'TV';
