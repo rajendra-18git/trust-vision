@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { getHistory, getDashboardMetrics } from '../services/api';
 import { formatDate, shortenHash } from '../utils/formatters';
+import AnalyzeButton from '../components/common/AnalyzeButton';
 
 export default function DashboardPage({ onNavigateAnalyze, onViewHistoryRecord, onOpenAssistant }) {
   const [historyItems, setHistoryItems] = useState([]);
@@ -44,13 +45,10 @@ export default function DashboardPage({ onNavigateAnalyze, onViewHistoryRecord, 
         <div className="flex items-center gap-3">
 
 
-          <button
-            onClick={onNavigateAnalyze}
-            className="px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white font-medium text-sm shadow-sm flex items-center justify-center gap-2 transition-all self-start sm:self-auto cursor-pointer"
-          >
+          <AnalyzeButton onClick={onNavigateAnalyze}>
             <FileSearch className="w-4 h-4" />
             <span>Start New Analysis</span>
-          </button>
+          </AnalyzeButton>
         </div>
       </div>
 
@@ -134,12 +132,11 @@ export default function DashboardPage({ onNavigateAnalyze, onViewHistoryRecord, 
             <p className="text-xs text-[#64748B] max-w-sm mx-auto">
               Upload your first image, video, or document to begin a media integrity analysis.
             </p>
-            <button
-              onClick={onNavigateAnalyze}
-              className="px-4 py-2 rounded-lg bg-[#2563EB] text-white text-xs font-medium"
-            >
-              Analyze Media
-            </button>
+            <div className="pt-2">
+              <AnalyzeButton onClick={onNavigateAnalyze}>
+                Analyze Media
+              </AnalyzeButton>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">

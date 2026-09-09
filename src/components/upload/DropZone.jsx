@@ -12,6 +12,7 @@ import {
   Lock
 } from 'lucide-react';
 import { formatBytes, calculateSHA256 } from '../../utils/hash';
+import AnalyzeButton from '../common/AnalyzeButton';
 
 export default function DropZone({ onFileSelected, selectedFile, onClearFile, onStartAnalysis }) {
   const [isDragging, setIsDragging] = useState(false);
@@ -229,13 +230,10 @@ export default function DropZone({ onFileSelected, selectedFile, onClearFile, on
               Cancel
             </button>
 
-            <button
-              onClick={onStartAnalysis}
-              className="px-5 py-2.5 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white font-medium text-xs shadow-sm flex items-center gap-2 transition-colors"
-            >
+            <AnalyzeButton onClick={onStartAnalysis}>
               <span>Run Integrity Analysis</span>
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </AnalyzeButton>
           </div>
         </div>
       )}

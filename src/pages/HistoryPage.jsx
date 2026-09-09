@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { History, Search, Trash2, Filter } from 'lucide-react';
 import { getHistory, clearHistory } from '../services/api';
 import { formatDate, shortenHash } from '../utils/formatters';
+import AnalyzeButton from '../components/common/AnalyzeButton';
 
 export default function HistoryPage({ onViewRecord, onNavigateAnalyze }) {
   const [historyItems, setHistoryItems] = useState([]);
@@ -117,12 +118,11 @@ export default function HistoryPage({ onViewRecord, onNavigateAnalyze }) {
               : 'Try adjusting your search query or clear existing search filters.'}
           </p>
           {historyItems.length === 0 && onNavigateAnalyze && (
-            <button
-              onClick={() => onNavigateAnalyze('analyze')}
-              className="px-4 py-2 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-medium"
-            >
-              Analyze Media
-            </button>
+            <div className="pt-2">
+              <AnalyzeButton onClick={() => onNavigateAnalyze('analyze')}>
+                Analyze Media
+              </AnalyzeButton>
+            </div>
           )}
         </div>
       ) : (
