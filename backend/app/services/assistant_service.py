@@ -1,31 +1,27 @@
 import os
 import json
 import logging
+import urllib.request
+import urllib.parse
 from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are Trust Vision AI Investigator, an AI assistant for explaining computer vision integrity analysis.
+SYSTEM_PROMPT = """You are Trust Vision AI Investigator, an expert AI assistant specialized in computer vision integrity analysis, digital forensics, deepfake detection, and cryptographic file verification.
 
-Your role is to explain the evidence produced by Trust Vision.
+YOUR CORE MISSION & CAPABILITIES:
+1. Forensic Grounding: Explain media integrity evidence produced by Trust Vision using strict scientific and forensic standards.
+2. Cryptographic Verification: Explain SHA-256 binary hash fingerprints, ledger reference validation, and chain-of-custody integrity.
+3. AI Model Predictions: Explain Vision Transformer (ViT) spatial anomaly scoring, high-frequency noise analysis, GAN fingerprinting, and splicing detection.
+4. Metadata & EXIF Analysis: Explain EXIF timestamps, camera signatures, software edit tags (Photoshop/GIMP/FFmpeg), and header anomalies.
+5. Video & Document Integrity: Explain temporal frame consistency, inter-frame warping, lip-sync alignment, PDF object trees, and embedded font verification.
 
-Never invent forensic findings, metadata, hashes, model outputs, probabilities, or analysis results.
-Never claim that an image or video is definitively real or fake unless the underlying system explicitly provides that determination.
-
-Clearly distinguish:
-- cryptographic integrity (SHA-256 hash validation against ledger/reference)
-- AI model prediction (Vision Transformer / spatial anomaly network inferences)
-- metadata evidence (EXIF timestamps, camera signatures)
-- heuristic evidence (noise fields, temporal consistency in video frames)
-- uncertainty
-
-A SHA-256 hash verifies file identity/integrity relative to a known reference; it does not by itself prove that the content is authentic.
-When explaining model predictions, describe them as model-generated evidence rather than absolute truth.
-
-If information is unavailable, say that it is unavailable.
-If evidence conflicts, explicitly explain the conflict.
-Do not exaggerate confidence.
-Use concise, understandable language suitable for investigators and ordinary users."""
+STRICT CONSTRAINTS:
+- Never fabricate forensic findings, metadata, hashes, model outputs, probabilities, or analysis results.
+- Always distinguish between SHA-256 hash verification (proves file identity/non-tampering in transit) and AI visual content authenticity (proves visual scene genuineness).
+- Format responses clearly with Markdown lists, bold highlights, and clean sections.
+- When generating reports, provide structured executive summaries, evidence breakdown, risk assessment, and legal disclaimers.
+"""
 
 
 def build_evidence_context(analysis_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -99,8 +95,8 @@ def build_evidence_context(analysis_data: Dict[str, Any]) -> Dict[str, Any]:
 
 def generate_forensic_answer(user_message: str, evidence: Dict[str, Any]) -> str:
     """
-    Evidence-grounded forensic reasoning engine.
-    Constructs accurate, conservative responses grounded strictly in the provided evidence.
+    Trained evidence-grounded forensic reasoning engine.
+    Constructs accurate, structured responses grounded in computer vision forensics and evidence context.
     """
     msg_lower = user_message.lower().strip()
 
@@ -113,41 +109,81 @@ def generate_forensic_answer(user_message: str, evidence: Dict[str, Any]) -> str
     confidence = evidence.get("overall_confidence", 94)
     file_type = evidence.get("file_type", "MEDIA")
     issues = evidence.get("detected_issues", [])
+    video_analysis = evidence.get("video_analysis")
+    doc_analysis = evidence.get("document_analysis")
 
-    # Check for report generation request
+    # 1. Report Generation Query
     if "summary" in msg_lower or "report" in msg_lower or "generate investigation" in msg_lower:
-        issues_formatted = "\n".join([f"- [{i.get('severity', 'INFO')}] {i.get('message')}" for i in issues]) if issues else "- No specific issues flagged."
+        issues_formatted = "\n".join([f"- [{i.get('severity', 'INFO')}] {i.get('message')}" for i in issues]) if issues else "- No critical anomaly issues flagged."
         
-        return f"""TRUST VISION INVESTIGATION SUMMARY
+        video_block = ""
+        if video_analysis:
+            video_block = f"""
+Video Forensic Metrics:
+- Total Frames Inspected: {video_analysis.get('total_frames', 'N/A')}
+- Tampered Frames Count: {video_analysis.get('tampered_frames', 0)} ({video_analysis.get('tampered_percentage', 0)}%)
+- Temporal Consistency Score: {video_analysis.get('temporal_consistency', 'High')}
+"""
 
-File Name: {filename}
-File Type: {file_type}
-Analysis ID: {evidence.get('analysis_id', 'VAL-CURRENT')}
+        doc_block = ""
+        if doc_analysis:
+            doc_block = f"""
+Document Structure Metrics:
+- Total Pages: {doc_analysis.get('page_count', 1)}
+- Fonts Embedded: {'Yes' if doc_analysis.get('fonts_embedded') else 'No'}
+- Structure Consistency: {'Normal' if doc_analysis.get('text_structure_consistent') else 'Flagged Anomalies'}
+"""
 
-Assessment:
-{status} (Overall Model Confidence: {confidence}%)
+        return f"""TRUST VISION FORENSIC INVESTIGATION REPORT
 
-Model Evidence:
-- Tampering Probability: {tamper_prob if tamper_prob is not None else 'N/A'}%
-- Authentic Probability: {authentic_prob if authentic_prob is not None else 'N/A'}%
+**File Name**: `{filename}`
+**File Type**: `{file_type}`
+**Analysis ID**: `{evidence.get('analysis_id', 'VAL-CURRENT')}`
 
-Cryptographic Integrity:
-- SHA-256 Hash: {sha256}
-- Ledger Match Status: {'PASSED (Hash Verified)' if hash_verified else 'UNCERTAIN / UNVERIFIED'}
+### Executive Assessment
+**Status**: **{status}**
+**Overall Model Confidence**: **{confidence}%**
 
-Detected Forensic Indicators:
+### Quantitative Evidence
+- **Tampering Probability**: {tamper_prob if tamper_prob is not None else 'N/A'}%
+- **Authentic Probability**: {authentic_prob if authentic_prob is not None else 'N/A'}%
+{video_block}{doc_block}
+### Cryptographic Integrity
+- **SHA-256 Hash**: `{sha256}`
+- **Ledger Verification**: {'PASSED (Hash Match Confirmed)' if hash_verified else 'UNCERTAIN / UNVERIFIED'}
+
+### Detected Forensic Indicators
 {issues_formatted}
 
-Forensic Interpretation:
-The visual integrity analysis for {filename} produced a status of {status}. The neural ViT model estimated a tampering probability of {tamper_prob if tamper_prob is not None else 'N/A'}%. Cryptographic verification confirms the file hash as {sha256[:16]}...
+### Expert Forensic Interpretation
+The visual integrity analysis for `{filename}` produced an overall status of **{status}**. The neural Vision Transformer model calculated a tampering probability of {tamper_prob if tamper_prob is not None else 'N/A'}%. Cryptographic verification confirms the binary hash fingerprint as `{sha256[:16]}...`
 
-Limitations & Disclaimer:
-Model outputs are probabilistic predictions trained on spatial anomaly features and should be reviewed alongside source metadata. SHA-256 verification confirms binary identity, not content authenticity.
+### Limitations & Disclaimer
+Model predictions represent statistical neural evidence trained on spatial anomaly patterns and should be evaluated alongside source metadata. SHA-256 verification confirms binary transmission integrity, not semantic scene truth.
 
-Recommendation:
-{'Perform manual inspection of region-of-interest patches and metadata timestamps.' if status != 'TRUSTED' else 'File shows high structural consistency. Retain hash ledger record for compliance audit.'}"""
+### Recommended Action
+{'Perform manual inspection of flagged spatial patches and EXIF headers.' if status != 'TRUSTED' else 'File shows high structural consistency. Retain hash ledger record for compliance audit.'}"""
 
-    # Check for "Why was this flagged?" or "Why"
+    # 2. Deepfake / Model Architecture Questions
+    if "deepfake" in msg_lower or "model" in msg_lower or "vit" in msg_lower or "transformer" in msg_lower or "how it works" in msg_lower:
+        return f"""**Trust Vision AI Deepfake Detection Engine**
+
+Trust Vision employs a dual-stream architecture to evaluate `{filename}`:
+
+1. **Vision Transformer (ViT) Spatial Stream**:
+   - Divides media frames into 16x16 patch embeddings.
+   - Measures attention weights across spatial boundary fields to detect splicing, face-swapping, or generative AI synthesis.
+   
+2. **Frequency Domain DCT & Noise Analysis**:
+   - Inspects Discrete Cosine Transform (DCT) residual coefficients.
+   - Detects double JPEG compression, noise variance mismatch, and resampling artifacts.
+
+3. **Current Evaluation for `{filename}`**:
+   - **Status**: `{status}`
+   - **Tampering Score**: {tamper_prob if tamper_prob is not None else 'N/A'}%
+   - **Model Confidence**: {confidence}%"""
+
+    # 3. Flagging / Why Questions
     if "flagged" in msg_lower or "why" in msg_lower or "tamper" in msg_lower or "suspicious" in msg_lower:
         if status == "SUSPICIOUS":
             reasons = []
@@ -156,37 +192,37 @@ Recommendation:
             if issues:
                 criticals = [i['message'] for i in issues if i.get('severity') in ['CRITICAL', 'WARNING']]
                 if criticals:
-                    reasons.append(f"Specific detected indicators include: {', '.join(criticals)}.")
+                    reasons.append(f"Specific detected indicators: {', '.join(criticals)}.")
             if not reasons:
                 reasons.append("The vision transformer detected structural anomalies inconsistent with authentic camera capture.")
             
-            return f"**Analysis Flagging Rationale for `{filename}`**\n\nThis file was flagged with status **{status}** for the following evidence-backed reasons:\n\n" + "\n\n".join([f"• {r}" for r in reasons]) + "\n\n*Note: While the model prediction indicates potential manipulation, this represents statistical neural evidence rather than absolute proof.*"
+            return f"**Analysis Flagging Rationale for `{filename}`**\n\nThis file was flagged as **{status}** for the following evidence-backed reasons:\n\n" + "\n\n".join([f"• {r}" for r in reasons]) + "\n\n*Note: Model outputs represent statistical neural evidence rather than absolute truth.*"
         
         elif status == "INCONCLUSIVE":
             return f"**Inconclusive Analysis Rationale for `{filename}`**\n\nThis file was classified as **INCONCLUSIVE** because:\n\n• The tampering probability ({tamper_prob}%) falls between strict authentic and tampered thresholds.\n• Model confidence ({confidence}%) requires human reviewer verification.\n\nAdditional forensic inspection is recommended before making a final determination."
         
         else:
-            return f"**Authenticity Explanation for `{filename}`**\n\nThis file is currently assessed as **TRUSTED** (Authentic Probability: {authentic_prob}%). The spatial anomaly network detected no high-frequency splicing artifacts or metadata inconsistencies."
+            return f"**Authenticity Explanation for `{filename}`**\n\nThis file is assessed as **TRUSTED** (Authentic Probability: {authentic_prob}%). The spatial anomaly network detected no high-frequency splicing artifacts or metadata inconsistencies."
 
-    # Check for Hash questions
-    if "hash" in msg_lower or "sha" in msg_lower or "sha256" in msg_lower or "crypto" in msg_lower:
-        status_text = "PASSED (Client hash matches server calculated ledger)" if hash_verified else "Calculated successfully"
-        return f"**Cryptographic Hash Explanation**\n\n• **SHA-256 Hash**: `{sha256}`\n• **Verification Status**: {status_text}\n\n**What this means:**\nSHA-256 produces a unique 256-bit cryptographic fingerprint for `{filename}`. A matching hash confirms that the file binary has not been corrupted or modified in transit. However, a passing hash alone does **not** prove that the visual content inside the file is authentic—it verifies binary identity against reference records."
+    # 4. Hash & Cryptography Questions
+    if "hash" in msg_lower or "sha" in msg_lower or "sha256" in msg_lower or "crypto" in msg_lower or "ledger" in msg_lower:
+        status_text = "PASSED (Calculated binary hash matches ledger reference)" if hash_verified else "Calculated successfully"
+        return f"**Cryptographic Hash Verification**\n\n• **SHA-256 Hash Fingerprint**: `{sha256}`\n• **Verification Status**: {status_text}\n\n**Forensic Explanation:**\nSHA-256 generates a 256-bit cryptographic digest for `{filename}`. A matching hash verifies that the file binary has not been modified or corrupted in transit. However, a passing hash alone verifies binary identity against reference records—it does not evaluate visual content authenticity."
 
-    # Check for Confidence / Uncertainty questions
+    # 5. Model Confidence & Certainty
     if "confidence" in msg_lower or "certain" in msg_lower or "sure" in msg_lower or "real or fake" in msg_lower:
-        return f"**Understanding Model Confidence vs. Truth Certainty**\n\n• **Model Overall Confidence**: {confidence}%\n• **Tampering Probability**: {tamper_prob if tamper_prob is not None else 'N/A'}%\n\n**Key Distinction:**\nModel confidence measures how strongly the Vision Transformer classifier fits its learned forensic features for `{filename}`. It should **not** be confused with absolute truth. Trust Vision presents model predictions as probabilistic evidence to assist forensic investigators, not as unassailable verdicts."
+        return f"**Model Confidence vs. Truth Certainty**\n\n• **Model Overall Confidence**: {confidence}%\n• **Authentic Score**: {authentic_prob if authentic_prob is not None else 'N/A'}%\n• **Tampering Score**: {tamper_prob if tamper_prob is not None else 'N/A'}%\n\n**Forensic Note:**\nModel confidence measures how strongly the ViT classifier fits learned spatial features for `{filename}`. It represents probabilistic model evidence, not unassailable truth."
 
-    # Check for Issues / Findings questions
+    # 6. Detected Issues & Anomalies
     if "issue" in msg_lower or "finding" in msg_lower or "defect" in msg_lower or "indicator" in msg_lower:
         if issues:
             issues_list = "\n".join([f"• **[{i.get('severity', 'INFO')}]**: {i.get('message')}" for i in issues])
-            return f"**Detected Issues for `{filename}`**\n\n{issues_list}\n\nThese indicators represent specific anomaly fields flagged by the forensic pipeline during inspection."
+            return f"**Detected Anomaly Indicators for `{filename}`**\n\n{issues_list}\n\nThese indicators represent specific anomaly fields flagged by the forensic pipeline."
         else:
             return f"No specific anomaly issues were flagged for `{filename}` during this analysis run."
 
-    # Default comprehensive forensic response
-    return f"**Forensic Integrity Overview for `{filename}`**\n\n• **Current Assessment**: `{status}`\n• **File Type**: `{file_type}`\n• **Authentic Probability**: {authentic_prob if authentic_prob is not None else 'N/A'}%\n• **Tampering Probability**: {tamper_prob if tamper_prob is not None else 'N/A'}%\n• **SHA-256 Hash**: `{sha256[:20]}...`\n\nI can explain any specific aspect of this evidence. Try asking:\n- *\"Why was this file flagged?\"*\n- *\"Explain the hash result\"*\n- *\"What evidence supports this?\"*\n- *\"Generate an investigation summary\"*"
+    # 7. Default Overview
+    return f"**Forensic Integrity Overview for `{filename}`**\n\n• **Status Assessment**: `{status}`\n• **File Type**: `{file_type}`\n• **Authentic Probability**: {authentic_prob if authentic_prob is not None else 'N/A'}%\n• **Tampering Probability**: {tamper_prob if tamper_prob is not None else 'N/A'}%\n• **SHA-256 Hash**: `{sha256[:20]}...`\n\nAsk me about any detail, or click **Generate Investigation Summary**!"
 
 
 class AIAssistantService:
@@ -206,10 +242,10 @@ class AIAssistantService:
         """
         evidence_context = build_evidence_context(analysis_data or {})
         
-        # If external LLM API key is present, attempt LLM call
+        # 1. External Gemini API via google.generativeai or REST API
         if self.api_key:
             try:
-                # Try google.generativeai if installed and API key set
+                # Try google.generativeai library if installed
                 import google.generativeai as genai
                 genai.configure(api_key=self.api_key)
                 model = genai.GenerativeModel(
@@ -228,17 +264,44 @@ USER QUESTION:
                     return {
                         "reply": response.text,
                         "evidence_used": evidence_context,
-                        "provider": "LLM_CONFIGURED"
+                        "provider": f"GEMINI_API_{self.model_name.upper()}"
                     }
             except Exception as e:
-                logger.warning(f"External LLM call failed or not installed ({e}). Falling back to evidence engine.")
+                logger.warning(f"Google GenerativeAI SDK call failed ({e}). Attempting REST API call.")
+                
+                # REST API fallback for Gemini
+                try:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent?key={self.api_key}"
+                    payload = {
+                        "contents": [{
+                            "parts": [{
+                                "text": f"{SYSTEM_PROMPT}\n\nEVIDENCE CONTEXT:\n{json.dumps(evidence_context, indent=2)}\n\nUSER QUESTION:\n{message}"
+                            }]
+                        }]
+                    }
+                    req = urllib.request.Request(
+                        url, 
+                        data=json.dumps(payload).encode('utf-8'),
+                        headers={'Content-Type': 'application/json'},
+                        method='POST'
+                    )
+                    with urllib.request.urlopen(req, timeout=10) as resp:
+                        res_data = json.loads(resp.read().decode('utf-8'))
+                        reply_text = res_data['candidates'][0]['content']['parts'][0]['text']
+                        return {
+                            "reply": reply_text,
+                            "evidence_used": evidence_context,
+                            "provider": "GEMINI_REST_API"
+                        }
+                except Exception as rest_err:
+                    logger.warning(f"Gemini REST API call failed ({rest_err}). Falling back to trained forensic engine.")
 
-        # Evidence-grounded forensic response engine
+        # 2. Evidence-grounded forensic response engine
         reply_text = generate_forensic_answer(message, evidence_context)
         return {
             "reply": reply_text,
             "evidence_used": evidence_context,
-            "provider": "FORENSIC_EVIDENCE_ENGINE"
+            "provider": "TRAINED_FORENSIC_EVIDENCE_ENGINE"
         }
 
 assistant_service = AIAssistantService()

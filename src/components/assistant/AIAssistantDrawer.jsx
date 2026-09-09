@@ -13,7 +13,8 @@ import {
   FileSearch,
   RefreshCw,
   Info,
-  GripHorizontal
+  GripHorizontal,
+  Cpu
 } from 'lucide-react';
 import { sendAssistantMessage } from '../../services/api';
 
@@ -201,6 +202,7 @@ export default function AIAssistantDrawer({ isOpen, onClose, currentRecord }) {
     { label: 'Explain this analysis', icon: Sparkles },
     { label: 'Why was this file flagged?', icon: AlertTriangle },
     { label: 'Explain the hash result', icon: ShieldCheck },
+    { label: 'Explain deepfake detection model', icon: Cpu },
     { label: 'Explain detected issues', icon: HelpCircle },
     { label: 'Generate Investigation Summary', icon: FileText }
   ];
