@@ -15,6 +15,7 @@ import {
 import ImageResultView from './ImageResultView';
 import VideoResultView from './VideoResultView';
 import DocumentResultView from './DocumentResultView';
+import AuditTrail from './AuditTrail';
 import { formatBytes } from '../../utils/hash';
 
 export default function ResultDashboard({ resultData, uploadedFile, onNewAnalysis, onOpenAssistant }) {
@@ -22,6 +23,7 @@ export default function ResultDashboard({ resultData, uploadedFile, onNewAnalysi
   const [openAccordions, setOpenAccordions] = useState({
     fileInfo: false,
     crypto: false,
+    auditTrail: true,
     metadata: false,
     forensics: true,
     model: false,
@@ -190,6 +192,14 @@ export default function ResultDashboard({ resultData, uploadedFile, onNewAnalysi
           })}
         </div>
       </div>
+
+      {/* Audit Trail Section */}
+      {resultData.auditTrail && (
+        <AuditTrail 
+          auditTrail={resultData.auditTrail} 
+          rawText={resultData.rawAuditTrailText} 
+        />
+      )}
 
       {/* 3. Media Specific Forensic Viewport */}
       {resultData.fileType === 'VIDEO' ? (
