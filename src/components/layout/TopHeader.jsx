@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, RefreshCw, Sparkles } from 'lucide-react';
+import { Menu, RefreshCw } from 'lucide-react';
 import LogoutButton from '../common/LogoutButton';
 
 export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, onToggleMobile, currentUser, onLogout, onOpenAssistant }) {
@@ -50,20 +50,8 @@ export default function TopHeader({ activeTab, backendStatus, onRefreshHealth, o
         </div>
       </div>
 
-      {/* Right: AI Investigator, System Health & User Info */}
+      {/* Right: System Health & User Info */}
       <div className="flex items-center gap-2.5">
-        
-        {/* ✨ AI Investigator Drawer Trigger Button */}
-        {onOpenAssistant && (
-          <button
-            onClick={onOpenAssistant}
-            title="Open Trust Vision AI Investigator"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs shadow-xs transition-colors cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span className="hidden xs:inline">AI Investigator</span>
-          </button>
-        )}
 
         <button
           onClick={onRefreshHealth}

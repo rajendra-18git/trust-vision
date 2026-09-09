@@ -10,8 +10,7 @@ import {
   ArrowLeft, 
   ChevronDown, 
   ChevronUp, 
-  CheckCircle2,
-  Sparkles
+  CheckCircle2
 } from 'lucide-react';
 import ImageResultView from './ImageResultView';
 import VideoResultView from './VideoResultView';
@@ -98,15 +97,6 @@ export default function ResultDashboard({ resultData, uploadedFile, onNewAnalysi
         </div>
 
         <div className="flex items-center gap-2.5">
-          {onOpenAssistant && (
-            <button
-              onClick={onOpenAssistant}
-              className="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>✨ AI Investigator</span>
-            </button>
-          )}
 
           <button
             onClick={handlePrintReport}

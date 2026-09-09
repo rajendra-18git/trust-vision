@@ -10,8 +10,7 @@ import {
   FileText,
   Lock,
   Cpu,
-  FileCheck,
-  Sparkles
+  FileCheck
 } from 'lucide-react';
 import { getHistory, getDashboardMetrics } from '../services/api';
 import { formatDate, shortenHash } from '../utils/formatters';
@@ -43,15 +42,6 @@ export default function DashboardPage({ onNavigateAnalyze, onViewHistoryRecord, 
         </div>
 
         <div className="flex items-center gap-3">
-          {onOpenAssistant && (
-            <button
-              onClick={onOpenAssistant}
-              className="px-4 py-2.5 rounded-lg bg-white hover:bg-slate-50 border border-[#E5E7EB] text-[#0F172A] font-semibold text-sm shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4 text-blue-600" />
-              <span>✨ AI Investigator</span>
-            </button>
-          )}
 
 
           <button
